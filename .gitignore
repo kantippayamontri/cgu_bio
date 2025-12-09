@@ -1,0 +1,34 @@
+# History files
+.Rhistory
+.Rapp.history
+
+# Session data
+.RData
+.Rprofile
+
+# Project files
+.Rproj.user/
+.Rproj
+
+# R package build files
+*.tar.gz
+*.zip
+*.Rcheck/
+
+# R output files
+*.log
+*.Rout
+*.rds
+*.rda
+*.feather
+*.parquet
+*.fst
+*.qs
+
+# RStudio files
+.DS_Store # macOS specific
+Thumbs.db # Windows specific
+
+# Directories
+/renv/
+/packrat/
