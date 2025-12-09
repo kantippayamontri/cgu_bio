@@ -122,8 +122,14 @@ table(merged_data$Gene_X_SNP1_clean)
 #    allele_a allele_b (risk)
 #        2792            1232
 
-# HEADER2: Convert to Boolean (1 = risk allele, 0 = non-risk allele)
-merged_data$Has_Risk_Allele <- ifelse(merged_data$Gene_X_SNP1_clean == "allele_b (risk)", 1, 0)
+# # HEADER2: Convert to Boolean (1 = risk allele, 0 = non-risk allele)
+# merged_data$Has_Risk_Allele <- ifelse(merged_data$Gene_X_SNP1_clean == "allele_b (risk)", 1, 0)
+
+# HEADER2: Convert to factor (allele_a as reference level = non-risk)
+merged_data$Gene_X_SNP1 <- factor(merged_data$Gene_X_SNP1_clean,
+    levels = c("allele_a", "allele_b (risk)")
+)
+table(merged_data$Gene_X_SNP1)
 
 # Verify conversion
 table(merged_data$Gene_X_SNP1_clean, merged_data$Has_Risk_Allele)
@@ -134,6 +140,7 @@ table(merged_data$Has_Risk_Allele)
 # HEADER2: Drop original columns
 merged_data$Gene_X_SNP1_clean <- NULL
 merged_data$Gene_X_SNP1 <- NULL
+
 # HEADER1: check Biomarker_A
 range(merged_data$Biomarker_A) # -117.5337  195.2368
 # we need to make the Biomarker_A which value < 0 to NA because it is not possible
@@ -330,6 +337,166 @@ breast_cancer$`T Stage` <- factor(breast_cancer$`T Stage`,
 # Verify
 str(breast_cancer$`T Stage`)
 table(breast_cancer$`T Stage`)
+
+# HEADER1: check N.Stage -> orinal
+colnames(breast_cancer)
+str(breast_cancer$`N Stage`) # chr type
+unique(breast_cancer$`N Stage`)
+
+# HEADER2: Standardize to lowercase
+breast_cancer$`N Stage` <- tolower(trimws(breast_cancer$`N Stage`))
+unique(breast_cancer$`N Stage`)
+
+# Convert to ORDERED factor (N1 < N2 < N3)
+breast_cancer$`N Stage` <- factor(breast_cancer$`N Stage`,
+    levels = c("n1", "n2", "n3"),
+    ordered = TRUE # ordinal data with meaningful sequence
+)
+
+# Verify
+str(breast_cancer$`N Stage`)
+table(breast_cancer$`N Stage`)
+
+# HEADER1: check X6th.Stage field (6th Stage)
+colnames(breast_cancer)
+unique(breast_cancer$`6th Stage`) # [1] "IIA"  "IIIA" "IIIC" "IIB"  "IIIB"
+
+# Standardize to lowercase
+breast_cancer$`6th Stage` <- tolower(trimws(breast_cancer$`6th Stage`))
+unique(breast_cancer$`6th Stage`)
+
+# Convert to ORDERED factor (IIA < IIB < IIIA < IIIB < IIIC)
+breast_cancer$`6th Stage` <- factor(breast_cancer$`6th Stage`,
+    levels = c("iia", "iib", "iiia", "iiib", "iiic"),
+    ordered = TRUE # ordinal data with meaningful sequence
+)
+
+# Verify
+str(breast_cancer$`6th Stage`)
+table(breast_cancer$`6th Stage`)
+
+# FIXME: how to order the ordinal
+# HEADER1: check differentiate field
+unique(breast_cancer$differentiate)
+# [1] "Poorly differentiated"     "Moderately differentiated"
+# [3] "Well differentiated"       "Undifferentiated" 
+
+# Standardize to lowercase
+breast_cancer$differentiate <- tolower(trimws(breast_cancer$differentiate))
+unique(breast_cancer$differentiate)
+
+# Convert to ORDERED factor (Well differentiated = best to Undifferentiated = worst)
+breast_cancer$differentiate <- factor(breast_cancer$differentiate,
+    levels = c("well differentiated", "moderately differentiated", "poorly differentiated", "undifferentiated"),
+    ordered = TRUE # ordinal data with meaningful sequence
+)
+
+# Verify
+str(breast_cancer$differentiate)
+table(breast_cancer$differentiate)
+
+# HEADER1: check Grade field
+unique(breast_cancer$Grade)
+# [1] "3"                     "2"                     "1"                    
+# [4] " anaplastic; Grade IV"
+
+# Standardize: trim whitespace and fix the anaplastic entry
+breast_cancer$Grade <- trimws(breast_cancer$Grade)
+breast_cancer$Grade[breast_cancer$Grade == "anaplastic; Grade IV"] <- "4"
+unique(breast_cancer$Grade)
+
+# Convert to ordered factor (1 = best to 4 = worst)
+breast_cancer$Grade <- factor(breast_cancer$Grade,
+    levels = c("1", "2", "3", "4"),
+    ordered = TRUE # ordinal data with meaningful sequence
+)
+
+# Verify
+str(breast_cancer$Grade)
+table(breast_cancer$Grade)
+
+# HEADER1: check A.Stage field
+unique(breast_cancer$`A Stage`) # [1] "Regional" "Distant" 
+
+# Standardize to lowercase
+breast_cancer$`A Stage` <- tolower(trimws(breast_cancer$`A Stage`))
+unique(breast_cancer$`A Stage`)
+
+# Convert to ORDERED factor (Regional = better prognosis < Distant = worse/metastasis)
+breast_cancer$`A Stage` <- factor(breast_cancer$`A Stage`,
+    levels = c("regional", "distant"),
+    ordered = TRUE # ordinal data: regional is better than distant
+)
+
+# need to explain for ordered factor
+# Regional = cancer has spread to nearby lymph nodes (better prognosis)
+# Distant = metastasis to distant organs (worse prognosis)
+# This is an ordinal variable with a clear progression: Regional < Distant.
+
+# Verify
+str(breast_cancer$`A Stage`)
+table(breast_cancer$`A Stage`)
+
+# HEADER1: check Tumor.Size field
+range(breast_cancer$`Tumor Size`) # [1]   1 140
+sum(is.na(breast_cancer$`Tumor Size`)) # 0
+
+# HEADER1: check Estrogen.Status field
+unique(breast_cancer$`Estrogen Status`) # [1] "Positive" "Negative" -> change to factor type without order cuz binary variable is not ordinal
+
+# Standardize to lowercase
+breast_cancer$`Estrogen Status` <- tolower(trimws(breast_cancer$`Estrogen Status`))
+unique(breast_cancer$`Estrogen Status`)
+
+# Convert to factor (Positive as reference level)
+breast_cancer$`Estrogen Status` <- factor(breast_cancer$`Estrogen Status`,
+    levels = c("positive", "negative")
+)
+
+# Verify
+str(breast_cancer$`Estrogen Status`)
+table(breast_cancer$`Estrogen Status`)
+# positive negative 
+#     3755      269 
+
+# HEADER1: check Progesterone.Status field
+unique(breast_cancer$`Progesterone Status`) # [1] "Positive" "Negative"
+
+# Standardize to lowercase
+breast_cancer$`Progesterone Status` <- tolower(trimws(breast_cancer$`Progesterone Status`))
+unique(breast_cancer$`Progesterone Status`)
+
+# Convert to factor (Positive as reference level)
+breast_cancer$`Progesterone Status` <- factor(breast_cancer$`Progesterone Status`,
+    levels = c("positive", "negative")
+)
+
+# Verify
+str(breast_cancer$`Progesterone Status`)
+table(breast_cancer$`Progesterone Status`)
+
+# HEADER1: check Regional.Node.Examined field
+colnames(breast_cancer)
+range(breast_cancer$`Regional Node Examined`) # [1]  1 61
+str(breast_cancer$`Regional Node Examined`) # num [1:4024] 24 14 14 2 3 18 11 9 20 21 ...
+
+# Convert to integer
+breast_cancer$`Regional Node Examined` <- as.integer(breast_cancer$`Regional Node Examined`)
+
+# Verify
+str(breast_cancer$`Regional Node Examined`)
+
+# HEADER1: check Reginol.Node.Positive field
+colnames(breast_cancer)
+range(breast_cancer$`Reginol Node Positive`) # [1]  1 46
+str(breast_cancer$`Reginol Node Positive`) # num [1:4024] 1 5 7 1 1 2 1 1 18 12 ...
+
+# Convert to integer
+breast_cancer$`Reginol Node Positive` <- as.integer(breast_cancer$`Reginol Node Positive`)
+
+# Verify
+str(breast_cancer$`Reginol Node Positive`)
+
 
 
 # IMPORTANT: 4. creating the final analytical cohort

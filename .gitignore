@@ -1,3 +1,5 @@
+# excel backup file
+~$*.xlsx
 # History files
 .Rhistory
 .Rapp.history
