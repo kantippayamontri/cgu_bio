@@ -9,6 +9,7 @@ patients_outputs_dataset_path <- "./datasets/patients_outcomes.xlsx"
 patients_outputs_dataset_path_sheet_name <- "patients_outcomes"
 breast_cancer_dataset_path <- "./datasets/Breast_Cancer.xlsx"
 breast_cancer_dataset_path_sheet_name <- "Breast_Cancer"
+final_clean_data <- "./cleaned_datasets.xlsx"
 
 # IMPORTANT: 1. construcing and initial cohort -> merge patients_biomarker and patients_outcomes together
 # load patients_biomarkers.xlsx file with have "student_phenotypes" and "code_book" sheet name
@@ -560,3 +561,11 @@ final_cohort <- final_cohort[complete.cases(final_cohort), ]
 nrow(final_cohort) # 3694
 sum(!complete.cases(final_cohort))  # Should be 0
 colSums(is.na(final_cohort))  # All should be 0
+
+# HEADER1: Save the final cleaned cohort to Excel file
+write_xlsx(final_cohort, final_clean_data)
+
+# Verify the file was created
+cat("Final cleaned dataset saved to:", final_clean_data, "\n")
+cat("Number of observations:", nrow(final_cohort), "\n")
+cat("Number of variables:", ncol(final_cohort), "\n")
