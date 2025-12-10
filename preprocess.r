@@ -1,4 +1,4 @@
-#TODO: change smoking_status and Gene_X_SNP1 to factor
+# TODO: change smoking_status and Gene_X_SNP1 to factor
 
 # install.packages("openxlsx2") # library for reading excel file
 
@@ -40,7 +40,7 @@ nrow(patients_outcomes) # found 4019
 # HEADER2: Number of unique patient IDs
 sum(duplicated(patients_outcomes$Patient_ID)) # found 5
 
-# NOTE: Checkpoint Question 1: How many duplicate Patient_ID entries did you find in the  “patients_outcomes” file before any merging or cleaning?
+# NOTE: Checkpoint Question 1: How many duplicate Patient_ID entries did you find in the  <U+201C>patients_outcomes<U+201D> file before any merging or cleaning?
 # ANS: 5
 
 # HEADER2: deal with duplicate patient IDs
@@ -61,7 +61,7 @@ sum(is.na(merged_data$event)) # 10 the number of patient_id that found on patien
 sum(is.na(merged_data$Survival.Months)) # 10 the number of patient_id that found on patients_biomarkers and not found in patients_outcomes
 
 # IMPORTANT: 2. quality control and plausibility assesments
-# Using the “code book” dictionaries, perform a thorough plausibility check on all  variables in your merged dataset. Identify all data points that violate the  provided normal ranges or logical consistency.
+# Using the <U+201C>code book<U+201D> dictionaries, perform a thorough plausibility check on all  variables in your merged dataset. Identify all data points that violate the  provided normal ranges or logical consistency.
 # For each anomaly, describe your corrective action (e.g., setting to NA) and justify  your choice.
 
 # HEADER1: check BMI
@@ -98,19 +98,23 @@ table(merged_data$Smoking_Status_clean, useNA = "ifany")
 # non-smoker     smoker       <NA>
 #       2705       1239         80
 
-# HEADER2: Convert to Boolean (1 = smoker, 0 = non-smoker, NA = missing)
-merged_data$Is_Smoker <- ifelse(merged_data$Smoking_Status_clean == "smoker", 1,
-    ifelse(merged_data$Smoking_Status_clean == "non-smoker", 0, NA)
+# HEADER2: Convert to factor instead of boolean
+merged_data$Smoking_Status <- factor(
+    ifelse(merged_data$Smoking_Status_clean == "smoker", "smoker",
+        ifelse(merged_data$Smoking_Status_clean == "non-smoker", "non-smoker", NA)
+    ),
+    levels = c("non-smoker", "smoker")
 )
-table(merged_data$Is_Smoker)
-sum(is.na(merged_data$Smoking_Status_clean))
 
-# HEADER2: drop the unused table
-colnames(merged_data)
-# Drop the intermediate cleaning column
+# Verify conversion
+str(merged_data$Smoking_Status)
+table(merged_data$Smoking_Status, useNA = "ifany")
+# non-smoker     smoker       <NA> 
+#       2705       1239         80 
+
+# HEADER2: drop the unused columns
 merged_data$Smoking_Status_clean <- NULL
-# drop the original
-merged_data$Smoking_Status <- NULL
+merged_data$Is_Smoker <- NULL # Remove the boolean version
 
 # HEADER1: check Gene_X_SNP1
 unique(merged_data$Gene_X_SNP1) # [1] "Allele_B (Risk)" "Allele_A" "Allele_B (risk)"
@@ -129,17 +133,21 @@ table(merged_data$Gene_X_SNP1_clean)
 merged_data$Gene_X_SNP1 <- factor(merged_data$Gene_X_SNP1_clean,
     levels = c("allele_a", "allele_b (risk)")
 )
+# NOTE: make Gene_X_SNP1 as factor type
+merged_data$Gene_X_SNP1_clean <- NULL # drop the intermediate cleaning column
+
+# Factor levels (internal storage):
+#
+# "allele_a" = level 1 (stored internally as integer 1)
+# "allele_b (risk)" = level 2 (stored internally as integer 2)
+
 table(merged_data$Gene_X_SNP1)
 
 # Verify conversion
-table(merged_data$Gene_X_SNP1_clean, merged_data$Has_Risk_Allele)
-table(merged_data$Has_Risk_Allele)
-#    0    1
-# 2792 1232
-
-# HEADER2: Drop original columns
-merged_data$Gene_X_SNP1_clean <- NULL
-merged_data$Gene_X_SNP1 <- NULL
+str(merged_data$Gene_X_SNP1)
+table(merged_data$Gene_X_SNP1)
+# allele_a allele_b (risk)
+#            2792            1232
 
 # HEADER1: check Biomarker_A
 range(merged_data$Biomarker_A) # -117.5337  195.2368
@@ -379,7 +387,7 @@ table(breast_cancer$`6th Stage`)
 # HEADER1: check differentiate field
 unique(breast_cancer$differentiate)
 # [1] "Poorly differentiated"     "Moderately differentiated"
-# [3] "Well differentiated"       "Undifferentiated" 
+# [3] "Well differentiated"       "Undifferentiated"
 
 # Standardize to lowercase
 breast_cancer$differentiate <- tolower(trimws(breast_cancer$differentiate))
@@ -397,7 +405,7 @@ table(breast_cancer$differentiate)
 
 # HEADER1: check Grade field
 unique(breast_cancer$Grade)
-# [1] "3"                     "2"                     "1"                    
+# [1] "3"                     "2"                     "1"
 # [4] " anaplastic; Grade IV"
 
 # Standardize: trim whitespace and fix the anaplastic entry
@@ -416,7 +424,7 @@ str(breast_cancer$Grade)
 table(breast_cancer$Grade)
 
 # HEADER1: check A.Stage field
-unique(breast_cancer$`A Stage`) # [1] "Regional" "Distant" 
+unique(breast_cancer$`A Stage`) # [1] "Regional" "Distant"
 
 # Standardize to lowercase
 breast_cancer$`A Stage` <- tolower(trimws(breast_cancer$`A Stage`))
@@ -456,8 +464,8 @@ breast_cancer$`Estrogen Status` <- factor(breast_cancer$`Estrogen Status`,
 # Verify
 str(breast_cancer$`Estrogen Status`)
 table(breast_cancer$`Estrogen Status`)
-# positive negative 
-#     3755      269 
+# positive negative
+#     3755      269
 
 # HEADER1: check Progesterone.Status field
 unique(breast_cancer$`Progesterone Status`) # [1] "Positive" "Negative"
@@ -497,6 +505,58 @@ breast_cancer$`Reginol Node Positive` <- as.integer(breast_cancer$`Reginol Node 
 # Verify
 str(breast_cancer$`Reginol Node Positive`)
 
+colnames(breast_cancer)
 
+# HEADER1: Quality control for lymph node data consistency
+# HEADER2: Check logical consistency between examined and positive nodes
+# Count how many records violate the rule (positive > examined)
+sum(breast_cancer$`Reginol Node Positive` > breast_cancer$`Regional Node Examined`, na.rm = TRUE)
+
+# HEADER2: Identify illogical rows
+illogical_rows <- breast_cancer$`Reginol Node Positive` > breast_cancer$`Regional Node Examined`
+illogical_rows[is.na(illogical_rows)] <- FALSE  # Handle NA values
+
+# HEADER2: View the problematic cases
+breast_cancer[illogical_rows, c("Patient_ID", "Regional Node Examined", "Reginol Node Positive")]
+
+# HEADER2: Set both values to NA for illogical cases
+# Rationale: If the data is inconsistent, we cannot trust either value
+breast_cancer$`Regional Node Examined`[illogical_rows] <- NA
+breast_cancer$`Reginol Node Positive`[illogical_rows] <- NA
+
+# HEADER2: Verify correction
+sum(breast_cancer$`Reginol Node Positive` > breast_cancer$`Regional Node Examined`, na.rm = TRUE)  # Should be 0
 
 # IMPORTANT: 4. creating the final analytical cohort
+colnames(merged_data)
+
+# HEADER1: Merge merged_data and breast_cancer datasets
+final_cohort <- merge(merged_data, breast_cancer, by = "Patient_ID", all = FALSE)
+
+# Verify the merge
+nrow(final_cohort) # [1] 4024
+nrow(merged_data) # [1] 4024
+nrow(breast_cancer) # [1] 4024
+
+# Check structure
+str(final_cohort)
+colnames(final_cohort)
+
+# Check for any unmatched records
+sum(!merged_data$Patient_ID %in% breast_cancer$Patient_ID)  # Records in merged_data not in breast_cancer
+sum(!breast_cancer$Patient_ID %in% merged_data$Patient_ID)  # Records in breast_cancer not in merged_data
+
+# HEADER1: Complete-case analysis - remove rows with any missing values
+# HEADER2: Check how many rows have missing values before removal
+sum(!complete.cases(final_cohort))
+
+# HEADER2: Identify which columns have missing values and how many
+colSums(is.na(final_cohort))
+
+# HEADER2: Remove rows with any NA values
+final_cohort <- final_cohort[complete.cases(final_cohort), ]
+
+# HEADER2: Verify removal
+nrow(final_cohort) # 3694
+sum(!complete.cases(final_cohort))  # Should be 0
+colSums(is.na(final_cohort))  # All should be 0
